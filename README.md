@@ -38,7 +38,7 @@ https://github.com/ilsang93/unity-material-controller-genrator.git
 `Packages/manifest.json` 의 `dependencies` 에 추가합니다.
 
 ```json
-"com.witchslounge.material-controller": "https://github.com/ilsang93/unity-material-controller-genrator.git"
+"com.ilsang.mcg": "https://github.com/ilsang93/unity-material-controller-genrator.git"
 ```
 
 ---

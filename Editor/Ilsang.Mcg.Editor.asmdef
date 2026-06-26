@@ -1,5 +1,5 @@
 {
-    "name": "WitchsLounge.MaterialController.Editor",
+    "name": "Ilsang.Mcg.Editor",
     "rootNamespace": "MaterialControl.Editor",
     "references": [
         "GUID:f7b8a37dfeb946f4ae9b04b425d8c6da",
