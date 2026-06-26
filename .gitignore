@@ -1,0 +1,13 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.csproj
+*.sln
+*.slnx
+*.user

@@ -1,0 +1,19 @@
+{
+    "name": "WitchsLounge.MaterialController.Editor",
+    "rootNamespace": "MaterialControl.Editor",
+    "references": [
+        "GUID:f7b8a37dfeb946f4ae9b04b425d8c6da",
+        "GUID:2bafac87e7f4b9b418d9448d219b01ab"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
