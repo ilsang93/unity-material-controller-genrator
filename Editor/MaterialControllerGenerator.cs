@@ -11,10 +11,15 @@ using UnityEngine.UI;
 namespace MaterialControl.Editor
 {
     /// <summary>
-    /// Generates a shader-specific MaterialController component for a target
-    /// GameObject and attaches it. Invokable from:
-    ///   - the GameObject context/hierarchy menu, and
-    ///   - the context menu (header "...") of a Renderer or Graphic component.
+    /// Generates a shader-specific MaterialController component. Invokable from:
+    ///   - the GameObject context/hierarchy menu,
+    ///   - the context menu (header "...") of a Renderer or Graphic component,
+    ///   - a Material asset's right-click menu in the Project window, and
+    ///   - the Material Inspector header context menu.
+    ///
+    /// Object-based entry points attach the controller after compilation.
+    /// Material-based entry points generate the script only (no GameObject to
+    /// attach to); use it later with Direct Material mode.
     ///
     /// The generated class declares one named serialized field per shader property,
     /// so Unity's Animation window lists and records each property by name.
@@ -85,7 +90,77 @@ namespace MaterialControl.Editor
             Generate(component.gameObject);
         }
 
+        // Material asset right-click in the Project window.
+        [MenuItem("Assets/Material Controller/Generate Controller Script", false, 1000)]
+        private static void GenerateFromMaterialAsset()
+        {
+            GenerateFromMaterial(Selection.activeObject as Material);
+        }
+
+        [MenuItem("Assets/Material Controller/Generate Controller Script", true)]
+        private static bool ValidateFromMaterialAsset()
+        {
+            return Selection.activeObject is Material;
+        }
+
+        // Material Inspector header "..." menu.
+        [MenuItem("CONTEXT/Material/Generate Controller Script", false, 1000)]
+        private static void GenerateFromMaterialContext(MenuCommand command)
+        {
+            GenerateFromMaterial(command.context as Material);
+        }
+
+        [MenuItem("CONTEXT/Material/Generate Controller Script", true)]
+        private static bool ValidateFromMaterialContext(MenuCommand command)
+        {
+            return command.context is Material;
+        }
+
         // ----- Core ---------------------------------------------------------
+
+        /// <summary>
+        /// Generates (script only) from a Material asset. There is no GameObject to
+        /// attach to, so the controller is created for later manual use with Direct
+        /// Material mode. If a controller for this shader already exists, just informs.
+        /// </summary>
+        private static void GenerateFromMaterial(Material material)
+        {
+            if (material == null)
+            {
+                EditorUtility.DisplayDialog("Material Controller", "No material selected.", "OK");
+                return;
+            }
+
+            Shader shader = material.shader;
+            string className = ClassPrefix + Sanitize(shader.name);
+
+            if (FindType(className) != null)
+            {
+                EditorUtility.DisplayDialog("Material Controller",
+                    $"Controller '{className}' already exists.\n\n" +
+                    "Add it to a GameObject, set Target Mode to \"Direct Material\", and assign this material.",
+                    "OK");
+                return;
+            }
+
+            string path = $"{OutputDir}/{className}.cs";
+            if (AssetDatabase.LoadAssetAtPath<MonoScript>(path) != null)
+            {
+                EditorUtility.DisplayDialog("Material Controller",
+                    $"Script '{path}' already exists but its type is not available.\n" +
+                    "Resolve any compile errors first.", "OK");
+                return;
+            }
+
+            string source = BuildSource(className, shader, material);
+            EnsureDir(OutputDir);
+            System.IO.File.WriteAllText(path, source);
+            AssetDatabase.ImportAsset(path);
+
+            Debug.Log($"[MaterialController] Generated '{path}' from material '{material.name}'. " +
+                      "Add it to a GameObject and use Direct Material mode to bind this material.");
+            AssetDatabase.Refresh();
+        }
 
         private static void Generate(GameObject go)
         {
