@@ -30,7 +30,7 @@ Unity 에디터에서 **Window → Package Manager → + → Add package from gi
 선택하고 아래 URL을 입력합니다.
 
 ```
-https://github.com/ilsang93/unity-material-controller-genrator.git
+https://github.com/ilsang93/unity-material-controller-generator.git
 ```
 
 ### manifest.json에 직접 추가
@@ -38,7 +38,7 @@ https://github.com/ilsang93/unity-material-controller-genrator.git
 `Packages/manifest.json` 의 `dependencies` 에 추가합니다.
 
 ```json
-"com.ilsang.mcg": "https://github.com/ilsang93/unity-material-controller-genrator.git"
+"com.ilsang.mcg": "https://github.com/ilsang93/unity-material-controller-generator.git"
 ```
 
 ---
