@@ -1,6 +1,6 @@
 {
   "name": "com.ilsang.mcg",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "displayName": "Material Controller Generator",
   "description": "Universal material controller for Unity. Generates a shader-specific controller component for any object with a material (SpriteRenderer, MeshRenderer, UI Image/RawImage, TextMeshProUGUI, ...). Every shader property becomes a named, animatable field, with optional runtime material instancing so the source asset is never modified.",
   "unity": "2022.3",

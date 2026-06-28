@@ -286,6 +286,11 @@ namespace MaterialControl.Editor
                     case ShaderPropertyType.Color:
                     {
                         Color c = material.HasProperty(propName) ? material.GetColor(propName) : Color.white;
+                        // HDR color properties (declared [HDR] in the shader) need a
+                        // ColorUsage attribute so the inspector shows the HDR picker with
+                        // an intensity slider and does not clamp values to [0,1].
+                        if ((flags & ShaderPropertyFlags.HDR) != 0)
+                            fields.AppendLine("        [ColorUsage(true, true)]");
                         fields.AppendLine($"        public Color {fieldName} = new Color({F(c.r)}, {F(c.g)}, {F(c.b)}, {F(c.a)});");
                         apply.AppendLine($"            material.SetColor({idName}, {fieldName});");
                         break;

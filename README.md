@@ -131,11 +131,16 @@ https://github.com/ilsang93/unity-material-controller-generator.git
 | 셰이더 타입 | 필드 타입 | 애니메이션 |
 |---|---|---|
 | Color   | `Color`   | ✅ |
+| Color (`[HDR]`) | `Color` (`[ColorUsage(true, true)]`) | ✅ |
 | Float   | `float`   | ✅ |
 | Range   | `float` (`[Range]`) | ✅ |
 | Vector  | `Vector4` | ✅ |
 | Int     | `int`     | ✅ |
 | Texture | `Texture` | ❌ (인스펙터 전용) |
+
+셰이더에서 `[HDR]` 로 선언된 컬러 프로퍼티는 생성된 필드에 `[ColorUsage(true, true)]`
+어트리뷰트가 붙어, 인스펙터에서 **HDR 컬러 피커(인텐시티 슬라이더 포함)** 로 표시되며
+값이 `[0, 1]` 로 클램핑되지 않습니다. 발광(Emission) 컬러 등에 사용하세요.
 
 ---
 

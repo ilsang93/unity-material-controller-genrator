@@ -3,6 +3,14 @@
 All notable changes to this package are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-06-28
+
+### Added
+- **HDR color support** in generated controllers. When a shader color property is
+  declared `[HDR]`, the generated `Color` field now carries a `[ColorUsage(true, true)]`
+  attribute so the inspector shows the HDR color picker with an intensity slider and
+  does not clamp values to `[0, 1]`. Non-HDR color properties are unchanged.
+
 ## [1.1.0] - 2026-06-27
 
 ### Added
