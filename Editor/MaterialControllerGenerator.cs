@@ -199,7 +199,7 @@ namespace MaterialControl.Editor
             AssetDatabase.ImportAsset(path);
 
             // Queue attachment for after the domain reload completes.
-            SessionState.SetInt(PendingInstanceIdKey, go.GetInstanceID());
+            SetPendingTarget(go);
             SessionState.SetString(PendingClassNameKey, className);
 
             Debug.Log($"[MaterialController] Generated '{path}'. It will be attached to '{go.name}' after compilation.");
@@ -210,12 +210,12 @@ namespace MaterialControl.Editor
         private static void OnScriptsReloaded()
         {
             string className = SessionState.GetString(PendingClassNameKey, null);
-            int instanceId = SessionState.GetInt(PendingInstanceIdKey, 0);
-            if (string.IsNullOrEmpty(className) || instanceId == 0)
+            bool hasTarget = TryGetPendingTarget(out var pendingTarget);
+            if (string.IsNullOrEmpty(className) || !hasTarget)
                 return;
 
             SessionState.EraseString(PendingClassNameKey);
-            SessionState.EraseInt(PendingInstanceIdKey);
+            ErasePendingTarget();
 
             Type type = FindType(className);
             if (type == null)
@@ -225,7 +225,7 @@ namespace MaterialControl.Editor
                 return;
             }
 
-            var go = EditorUtility.InstanceIDToObject(instanceId) as GameObject;
+            var go = ResolvePendingTarget(pendingTarget);
             if (go == null)
             {
                 Debug.LogWarning("[MaterialController] Target GameObject no longer exists; skipping auto-attach.");
@@ -235,6 +235,76 @@ namespace MaterialControl.Editor
             AttachIfMissing(go, type);
             Debug.Log($"[MaterialController] Attached '{className}' to '{go.name}'.");
         }
+
+        // ----- Pending-target storage ---------------------------------------
+        //
+        // Unity replaced the int-based instance id with EntityId. In Unity 6.6 (6000.6)
+        // the old surface -- Object.GetInstanceID(), EditorUtility.InstanceIDToObject(int),
+        // and even the implicit int<->EntityId conversions -- became obsolete-as-error
+        // (CS0619), so the whole assembly fails to load. Because the conversions are
+        // themselves errors, a cast cannot bridge the two worlds; the stored value's own
+        // type has to differ per version. These helpers isolate that split so the calling
+        // code stays version-agnostic.
+        //
+        // The guard is 6000.6 rather than 6000.5 because the replacement APIs did not all
+        // ship together: EditorUtility.EntityIdToObject is already present in 6000.3,
+        // while SessionState.{Set,Get,Erase}EntityId and Object.GetEntityId() are absent
+        // in 6000.3 and present in 6000.6 (checked against the API metadata of the
+        // editors installed here: 2022.3, 6000.0, 6000.2, 6000.3, 6000.6 -- 6000.4/6000.5
+        // were not available to test). Gating on 6000.6 is safe either way: if those
+        // accessors did land in 6000.5, that version simply keeps the legacy path, which
+        // still compiles there because the old surface is only a warning before 6.6.
+
+#if UNITY_6000_6_OR_NEWER
+        private static void SetPendingTarget(GameObject go)
+        {
+            SessionState.SetEntityId(PendingInstanceIdKey, go.GetEntityId());
+        }
+
+        private static bool TryGetPendingTarget(out EntityId target)
+        {
+            target = SessionState.GetEntityId(PendingInstanceIdKey, EntityId.None);
+            return target.IsValid();
+        }
+
+        private static void ErasePendingTarget()
+        {
+            SessionState.EraseEntityId(PendingInstanceIdKey);
+        }
+
+        private static GameObject ResolvePendingTarget(EntityId target)
+        {
+            return EditorUtility.EntityIdToObject(target) as GameObject;
+        }
+#else
+        private static void SetPendingTarget(GameObject go)
+        {
+            SessionState.SetInt(PendingInstanceIdKey, go.GetInstanceID());
+        }
+
+        private static bool TryGetPendingTarget(out int target)
+        {
+            target = SessionState.GetInt(PendingInstanceIdKey, 0);
+            return target != 0;
+        }
+
+        private static void ErasePendingTarget()
+        {
+            SessionState.EraseInt(PendingInstanceIdKey);
+        }
+
+        private static GameObject ResolvePendingTarget(int target)
+        {
+            // 6000.3..6000.5 already ship EntityIdToObject (and mark the int overload
+            // obsolete) while still lacking SessionState's EntityId accessors, so the id
+            // is stored as an int here but resolved through the new entry point.
+#if UNITY_6000_3_OR_NEWER
+            return EditorUtility.EntityIdToObject(target) as GameObject;
+#else
+            return EditorUtility.InstanceIDToObject(target) as GameObject;
+#endif
+        }
+#endif
 
         private static void AttachIfMissing(GameObject go, Type type)
         {
